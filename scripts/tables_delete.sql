@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS st_game;
+DROP TABLE IF EXISTS st_playoff_url;
+DROP TABLE IF EXISTS game;

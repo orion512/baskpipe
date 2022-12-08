@@ -1,0 +1,16 @@
+credentials_path: "C:\\Users\\Dominik\\Documents\\credentials\\baskpipe_creds.yaml"
+
+init_order: [
+  "table_st_game.sql",
+  "table_st_playoff_url.sql",
+  "table_game.sql"
+]
+
+etl:
+  game: "game_to_live.sql"
+
+tests:
+  game: [
+    "test_game_num_games.sql",
+    "test_game_home_playoff_games.sql"
+    ]
