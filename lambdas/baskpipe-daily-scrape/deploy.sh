@@ -13,8 +13,14 @@ cp src/lambda_function.py src/package/
 cd src/package
 zip -r ../../../baskpipe-daily-scrape.zip .
 
-# Deploy to AWS Lambda
-aws lambda update-function-code --function-name baskpipe-daily-scrape --zip-file fileb://../../../baskpipe-daily-scrape.zip --profile=per-iac-man
+# Upload to S3
+aws s3 cp ../../../baskpipe-daily-scrape.zip s3://baskpipe/lambdas/baskpipe-daily-scrape.zip --profile=per-iac-man
+
+# Deploy to AWS Lambda using the S3 URL
+aws lambda update-function-code --function-name baskpipe-daily-scrape --s3-bucket baskpipe --s3-key lambdas/baskpipe-daily-scrape.zip --profile=per-iac-man
+
+# Clean up deployment package
+rm -rf src/package
 
 # Clean up
 rm ../../../baskpipe-daily-scrape.zip

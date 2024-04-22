@@ -43,6 +43,9 @@ def list_dicts_to_s3(data: list[dict], s3_path: str):
     Returns: None
     """
 
+    if len(data) == 0:
+        return
+
     if s3_path.startswith('s3://'):
         s3_path = s3_path[5:]
     bucket_name, key = s3_path.split('/', 1)

@@ -131,3 +131,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+lambdas/**/package/
+
+# Terraform specific ignores
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform/
+terraform/*.tfvars
+terraform/crash.log
+terraform/*.tfplan
+terraform/.terraform.lock.hcl
+terraform/main.tf
