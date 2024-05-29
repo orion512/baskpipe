@@ -1,5 +1,5 @@
 # Baskpipe (Basketball Data Pipeline)
-Dometl is a Python ETL package.
+A fully AWS native data pipeline.
 
 # What does it do?
 
