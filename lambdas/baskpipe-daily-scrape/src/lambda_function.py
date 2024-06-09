@@ -105,7 +105,7 @@ def lambda_handler(event, context):
         raise Exception('Something went wrong with the scraper.')
     
     try:
-        full_s3_path = os.path.join( event['s3_path'], f"{event['date']}_games_.csv")
+        full_s3_path = os.path.join( event['s3_path'], f"{event['date']}_games.csv")
         list_dicts_to_s3(list_of_games, full_s3_path)
     except Exception as err:
         print(err)
