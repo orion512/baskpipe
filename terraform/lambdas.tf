@@ -10,3 +10,17 @@ resource "aws_lambda_function" "baskpipe-daily-scrape" {
 
     timeout = 90
 }
+
+resource "aws_lambda_function" "sql-execute" {
+    function_name = "sql-execute"
+    handler       = "lambda_function.lambda_handler"
+    runtime       = "python3.12"
+
+    s3_bucket = "baskpipe"
+    s3_key    = "lambdas/sql-execute.zip"
+
+    role = aws_iam_role.sql_execute_role.arn
+
+    timeout = 900
+}
+
