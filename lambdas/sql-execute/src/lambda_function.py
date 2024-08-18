@@ -69,16 +69,25 @@ def lambda_handler(event, context):
             with connection.cursor() as cursor:
                 # Execute the SQL query
                 cursor.execute(sql_query)
-                result = cursor.fetchall()
-        
-        connection.commit()
+
+                # Check if it's a SELECT query
+                if cursor.description is not None:
+                    result = cursor.fetchall()  # Fetch all results
+                    response_text = f"SQL query executed succesfully. Result set length: {len(result)}. Here are first 5 rows {result[:5]}"
+                else:
+                    response_text = f"SQL query executed succesfully. No result set returned. Query was probably a DDL/DML operation."
+
+            # Commit the transaction for non-SELECT queries like INSERT, UPDATE, DELETE
+            connection.commit()
 
     except Exception as e:
         raise Exception(f"Database query execution failed: {e}")
 
+    print(response_text)
+
     # Return the result of the query
     return {
         'statusCode': 200,
-        'body': json.dumps(result)
+        'body': response_text
     }
 
