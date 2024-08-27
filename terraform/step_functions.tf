@@ -65,6 +65,7 @@ resource "aws_sfn_state_machine" "nba_daily_games_baskref" {
       "load_staging": {
         "Type": "Task",
         "Resource": "${aws_lambda_function.sql-execute.arn}",
+        "ResultPath": "$.combinedResult",
         "Parameters": {
           "s3_sql_path": "s3://baskpipe/sqls/dml/universal_s3_csv_load.sql",
           "custom_params": {
@@ -76,6 +77,44 @@ resource "aws_sfn_state_machine" "nba_daily_games_baskref" {
           },
           "secret_name": "baskpipe_db_secret"
         },
+        "Next": "init_public"
+      },
+      "init_public": {
+        "Type": "Parallel",
+        "Branches": [
+          {
+            "StartAt": "init_games",
+            "States": {
+              "init_games": {
+                "Type": "Task",
+                "Resource": "${aws_lambda_function.sql-execute.arn}",
+                "ResultPath": "$.combinedResult",
+                "Parameters": {
+                  "s3_sql_path": "s3://baskpipe/sqls/ddl/games.sql",
+                  "custom_params": {},
+                  "secret_name": "baskpipe_db_secret"
+                },
+                "End": true
+              }
+            }
+          },
+          {
+            "StartAt": "init_teams",
+            "States": {
+              "init_teams": {
+                "Type": "Task",
+                "Resource": "${aws_lambda_function.sql-execute.arn}",
+                "ResultPath": "$.combinedResult",
+                "Parameters": {
+                  "s3_sql_path": "s3://baskpipe/sqls/ddl/teams.sql",
+                  "custom_params": {},
+                  "secret_name": "baskpipe_db_secret"
+                },
+                "End": true
+              }
+            }
+          }
+        ],
         "End": true
       }
     }

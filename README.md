@@ -29,5 +29,13 @@ terraform plan
 terraform apply
 ```
 
-# Folder Structure?
+# Folder Structure
+
+# DB - SQL
+Upload all SQLs to S3 to be used by AWS services.
+```
+aws s3 cp ./db s3://baskpipe/sqls/ --recursive --profile per-iac-man
+```
+
+In the future potentially create a GH action whcih moves ./db folder to S3 on push to main.
 
