@@ -74,8 +74,8 @@ resource "aws_iam_role_policy" "stepf_nba_daily_games_baskref_policy" {
           "lambda:InvokeFunction"
         ],
         Resource = [
-          "${aws_lambda_function.baskpipe-daily-scrape.arn}",
-          "${aws_lambda_function.sql-execute.arn}"
+          "${aws_lambda_function.baskpipe_daily_scrape.arn}",
+          "${aws_lambda_function.sql_execute.arn}"
         ]
       }
     ]

@@ -2,6 +2,14 @@
 Script for AWS Lambda to scrape NBA games for 1 day and save to S3.
 
 Author: Dominik Zulovec Sajovic, April 2024
+
+how to call the function
+
+{
+    "date": "2006-03-14",
+    "s3_path": "s3://my-bucket/path/"
+}
+
 """
 
 import os

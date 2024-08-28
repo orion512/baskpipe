@@ -1,4 +1,4 @@
-resource "aws_lambda_function" "baskpipe-daily-scrape" {
+resource "aws_lambda_function" "baskpipe_daily_scrape" {
     function_name = "baskpipe-daily-scrape"
     handler       = "lambda_function.lambda_handler"
     runtime       = "python3.12"
@@ -11,7 +11,7 @@ resource "aws_lambda_function" "baskpipe-daily-scrape" {
     timeout = 90
 }
 
-resource "aws_lambda_function" "sql-execute" {
+resource "aws_lambda_function" "sql_execute" {
     function_name = "sql-execute"
     handler       = "lambda_function.lambda_handler"
     runtime       = "python3.12"

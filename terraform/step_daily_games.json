@@ -1,0 +1,172 @@
+{
+    "Comment":"This is a pipeline for fetching, storing and procesing daily nba games.",
+    "StartAt":"get_data_scrape",
+    "States":{
+       "get_data_scrape":{
+          "Type":"Task",
+          "Resource":"${baskpipe_daily_scrape_arn}",
+          "ResultPath":"$.combinedResult",
+          "Parameters":{
+             "date.$":"$.date_day",
+             "s3_path":"s3://baskpipe/data/daily_games/"
+          },
+          "Next":"init_staging"
+       },
+       "init_staging":{
+          "Type":"Task",
+          "Resource":"${sql_execute_arn}",
+          "ResultPath":"$.combinedResult",
+          "Parameters":{
+             "s3_sql_path":"s3://baskpipe/sqls/ddl/st_daily_games.sql",
+             "custom_params":{
+                
+             },
+             "secret_name":"baskpipe_db_secret"
+          },
+          "Next":"load_staging"
+       },
+       "load_staging":{
+          "Type":"Task",
+          "Resource":"${sql_execute_arn}",
+          "ResultPath":"$.combinedResult",
+          "Parameters":{
+             "s3_sql_path":"s3://baskpipe/sqls/dml/universal_s3_csv_load.sql",
+             "custom_params":{
+                "SCHEMA_NAME":"staging",
+                "TABLE_NAME":"st_daily_games",
+                "BUCKET_NAME":"baskpipe",
+                "S3_PATH.$":"States.Format('data/daily_games/{}_games.csv', $.date_day)",
+                "REGION_NAME":"eu-west-2"
+             },
+             "secret_name":"baskpipe_db_secret"
+          },
+          "Next":"init_public"
+       },
+       "init_public":{
+          "Type":"Parallel",
+          "Branches":[
+             {
+                "StartAt":"init_games",
+                "States":{
+                   "init_games":{
+                      "Type":"Task",
+                      "Resource":"${sql_execute_arn}",
+                      "ResultPath":"$.combinedResult",
+                      "Parameters":{
+                         "s3_sql_path":"s3://baskpipe/sqls/ddl/games.sql",
+                         "custom_params":{
+                            
+                         },
+                         "secret_name":"baskpipe_db_secret"
+                      },
+                      "Next": "load_games"
+                   },
+                   "load_games":{
+                      "Type":"Task",
+                      "Resource":"${sql_execute_arn}",
+                      "ResultPath":"$.combinedResult",
+                      "Parameters":{
+                         "s3_sql_path":"s3://baskpipe/sqls/dml/games_load.sql",
+                         "custom_params":{
+                            
+                         },
+                         "secret_name":"baskpipe_db_secret"
+                      },
+                      "End":true
+                   }
+                }
+             },
+             {
+                "StartAt":"init_teams",
+                "States":{
+                   "init_teams":{
+                      "Type":"Task",
+                      "Resource":"${sql_execute_arn}",
+                      "ResultPath":"$.combinedResult",
+                      "Parameters":{
+                         "s3_sql_path":"s3://baskpipe/sqls/ddl/teams.sql",
+                         "custom_params":{
+                            
+                         },
+                         "secret_name":"baskpipe_db_secret"
+                      },
+                      "Next": "load_teams"
+                   },
+                   "load_teams":{
+                      "Type":"Task",
+                      "Resource":"${sql_execute_arn}",
+                      "ResultPath":"$.combinedResult",
+                      "Parameters":{
+                         "s3_sql_path":"s3://baskpipe/sqls/dml/teams_load.sql",
+                         "custom_params":{
+                            
+                         },
+                         "secret_name":"baskpipe_db_secret"
+                      },
+                      "End":true
+                   }
+                }
+             },
+             {
+                "StartAt":"init_game_team_stats",
+                "States":{
+                   "init_game_team_stats":{
+                      "Type":"Task",
+                      "Resource":"${sql_execute_arn}",
+                      "ResultPath":"$.combinedResult",
+                      "Parameters":{
+                         "s3_sql_path":"s3://baskpipe/sqls/ddl/game_team_stats.sql",
+                         "custom_params":{
+                            
+                         },
+                         "secret_name":"baskpipe_db_secret"
+                      },
+                      "End":true
+                   }
+                }
+             }
+          ],
+          "Next": "load_team_stats"
+       },
+       "load_team_stats":{
+          "Type":"Parallel",
+          "Branches":[
+             {
+                "StartAt":"load_home_stats",
+                "States":{
+                   "load_home_stats":{
+                      "Type":"Task",
+                      "Resource":"${sql_execute_arn}",
+                      "Parameters":{
+                         "s3_sql_path":"s3://baskpipe/sqls/dml/game_team_stats_home_load.sql",
+                         "custom_params":{
+                            
+                         },
+                         "secret_name":"baskpipe_db_secret"
+                      },
+                      "End": true
+                   }
+                }
+             },
+             {
+                "StartAt":"load_away_stats",
+                "States":{
+                   "load_away_stats":{
+                      "Type":"Task",
+                      "Resource":"${sql_execute_arn}",
+                      "Parameters":{
+                         "s3_sql_path":"s3://baskpipe/sqls/dml/game_team_stats_away_load.sql",
+                         "custom_params":{
+                            
+                         },
+                         "secret_name":"baskpipe_db_secret"
+                      },
+                      "End": true
+                   }
+                }
+             }
+            ],
+            "End": true
+        }
+    }
+}

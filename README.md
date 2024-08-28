@@ -29,6 +29,13 @@ terraform plan
 terraform apply
 ```
 
+Create a file terraform.tvars (which is gitignored).
+In the file define your DB password.
+```
+baskpipe_db_password = "YOUR_PASSWORD"
+```
+
+
 # Folder Structure
 
 # DB - SQL
