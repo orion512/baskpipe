@@ -1,0 +1,3 @@
+baskpipe_db_password = "SOME-PASSWORD"
+notification_phone_number = "+447111111111" # The phone number for SNS notifications in E.164 format
+notification_email = "your-email@gmail.com" # The email for SNS notifications

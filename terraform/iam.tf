@@ -77,6 +77,13 @@ resource "aws_iam_role_policy" "stepf_nba_daily_games_baskref_policy" {
           "${aws_lambda_function.baskpipe_daily_scrape.arn}",
           "${aws_lambda_function.sql_execute.arn}"
         ]
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "sns:Publish"
+        ],
+        Resource = "${aws_sns_topic.sf_daily_baskref_notification.arn}"
       }
     ]
   })
