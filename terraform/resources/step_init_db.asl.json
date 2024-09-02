@@ -1,0 +1,76 @@
+{
+    "Comment": "A State Machine to initialize the database for baskpipe.",
+    "StartAt": "init_db",
+    "States": {
+        "init_db":{
+            "Type":"Task",
+            "Resource":"${sql_execute_arn}",
+            "ResultPath": null,
+            "Parameters":{
+                "s3_sql_path":"s3://baskpipe/sqls/ddl/init_db.sql",
+                "custom_params":{
+                    
+                },
+                "secret_name":"baskpipe_db_secret"
+            },
+            "Next":"init_tables"
+        },
+        "init_tables":{
+            "Type":"Parallel",
+            "Branches":[
+                {
+                    "StartAt":"init_games",
+                    "States":{
+                        "init_games":{
+                            "Type":"Task",
+                            "Resource":"${sql_execute_arn}",
+                            "ResultPath": null,
+                            "Parameters":{
+                                "s3_sql_path":"s3://baskpipe/sqls/ddl/games.sql",
+                                "custom_params":{
+                                    
+                                },
+                                "secret_name":"baskpipe_db_secret"
+                            },
+                            "End":true
+                        }
+                    }
+                },
+                {
+                    "StartAt":"init_teams",
+                    "States":{
+                        "init_teams":{
+                            "Type":"Task",
+                            "Resource":"${sql_execute_arn}",
+                            "ResultPath": null,
+                            "Parameters":{
+                                "s3_sql_path":"s3://baskpipe/sqls/ddl/teams.sql",
+                                "custom_params":{
+                                    
+                                },
+                                "secret_name":"baskpipe_db_secret"
+                            },
+                            "End":true
+                        }
+                    }
+                }
+            ],
+            "Next":"init_game_team_stats"
+        },
+        "init_game_team_stats":{
+            "Type":"Task",
+            "Resource":"${sql_execute_arn}",
+            "ResultPath": null,
+            "Parameters":{
+                "s3_sql_path":"s3://baskpipe/sqls/ddl/game_team_stats.sql",
+                "custom_params":{
+                    
+                },
+                "secret_name":"baskpipe_db_secret"
+            },
+            "End":true
+        }
+
+    }
+  }
+  

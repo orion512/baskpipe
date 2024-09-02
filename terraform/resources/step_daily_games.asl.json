@@ -40,27 +40,14 @@
                },
                "secret_name":"baskpipe_db_secret"
            },
-           "Next":"init_public"
+           "Next":"load_public"
        },
-       "init_public":{
+       "load_public":{
            "Type":"Parallel",
            "Branches":[
                {
-                   "StartAt":"init_games",
+                   "StartAt":"load_games",
                    "States":{
-                       "init_games":{
-                           "Type":"Task",
-                           "Resource":"${sql_execute_arn}",
-                           "ResultPath": null,
-                           "Parameters":{
-                               "s3_sql_path":"s3://baskpipe/sqls/ddl/games.sql",
-                               "custom_params":{
-                                   
-                               },
-                               "secret_name":"baskpipe_db_secret"
-                           },
-                           "Next":"load_games"
-                       },
                        "load_games":{
                            "Type":"Task",
                            "Resource":"${sql_execute_arn}",
@@ -77,45 +64,14 @@
                    }
                },
                {
-                   "StartAt":"init_teams",
+                   "StartAt":"load_teams",
                    "States":{
-                       "init_teams":{
-                           "Type":"Task",
-                           "Resource":"${sql_execute_arn}",
-                           "ResultPath": null,
-                           "Parameters":{
-                               "s3_sql_path":"s3://baskpipe/sqls/ddl/teams.sql",
-                               "custom_params":{
-                                   
-                               },
-                               "secret_name":"baskpipe_db_secret"
-                           },
-                           "Next":"load_teams"
-                       },
                        "load_teams":{
                            "Type":"Task",
                            "Resource":"${sql_execute_arn}",
                            "ResultPath": null,
                            "Parameters":{
                                "s3_sql_path":"s3://baskpipe/sqls/dml/teams_load.sql",
-                               "custom_params":{
-                                   
-                               },
-                               "secret_name":"baskpipe_db_secret"
-                           },
-                           "End":true
-                       }
-                   }
-               },
-               {
-                   "StartAt":"init_game_team_stats",
-                   "States":{
-                       "init_game_team_stats":{
-                           "Type":"Task",
-                           "Resource":"${sql_execute_arn}",
-                           "ResultPath": null,
-                           "Parameters":{
-                               "s3_sql_path":"s3://baskpipe/sqls/ddl/game_team_stats.sql",
                                "custom_params":{
                                    
                                },

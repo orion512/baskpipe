@@ -30,8 +30,8 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
 }
 
-resource "aws_iam_role" "stepf_nba_daily_games_baskref_role" {
-  name = "stepf-nba-daily-games-baskref-role"
+resource "aws_iam_role" "baskpipe_stepf_role" {
+  name = "baskpipe-stepf-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -47,9 +47,9 @@ resource "aws_iam_role" "stepf_nba_daily_games_baskref_role" {
   })
 }
 
-resource "aws_iam_role_policy" "stepf_nba_daily_games_baskref_policy" {
-  name   = "stepf-nba-daily-games-baskref-policy"
-  role   = aws_iam_role.stepf_nba_daily_games_baskref_role.id
+resource "aws_iam_role_policy" "baskpipe_stepf_policy" {
+  name   = "baskpipe-stepf-policy"
+  role   = aws_iam_role.baskpipe_stepf_role.id
 
   policy = jsonencode({
     Version = "2012-10-17",

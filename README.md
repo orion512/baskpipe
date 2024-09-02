@@ -6,7 +6,7 @@ A fully AWS native data pipeline.
 
 # How to use it?
 
-
+Init DB has to happen first.
 
 
 # Terraform

@@ -1,0 +1,116 @@
+{
+    "Comment": "A State Machine that bulk ingests entire NBA seasons by year.",
+    "StartAt": "ingest_seasons",
+    "States": {
+      "ingest_seasons": {
+        "Type": "Map",
+        "ItemsPath": "$.years",
+        "MaxConcurrency": 1,
+        "Iterator": {
+          "StartAt": "init_staging",
+          "States": {
+            "init_staging":{
+                "Type":"Task",
+                "Resource":"${sql_execute_arn}",
+                "ResultPath": null,
+                "Parameters":{
+                    "s3_sql_path":"s3://baskpipe/sqls/ddl/st_daily_games.sql",
+                    "custom_params":{
+                        
+                    },
+                    "secret_name":"baskpipe_db_secret"
+                },
+                "Next":"load_staging"
+            },
+            "load_staging":{
+                "Type":"Task",
+                "Resource":"${sql_execute_arn}",
+                "ResultPath": null,
+                "Parameters":{
+                    "s3_sql_path":"s3://baskpipe/sqls/dml/universal_s3_csv_load.sql",
+                    "custom_params":{
+                        "SCHEMA_NAME":"staging",
+                        "TABLE_NAME":"st_daily_games",
+                        "BUCKET_NAME":"baskpipe",
+                        "S3_PATH.$":"States.Format('data/season_games/{}_gs.csv', $)",
+                        "REGION_NAME":"eu-west-2"
+                    },
+                    "secret_name":"baskpipe_db_secret"
+                },
+                "Next":"load_teams"
+            },
+            "load_teams":{
+                "Type":"Task",
+                "Resource":"${sql_execute_arn}",
+                "ResultPath": null,
+                "Parameters":{
+                    "s3_sql_path":"s3://baskpipe/sqls/dml/teams_load.sql",
+                    "custom_params":{
+                        
+                    },
+                    "secret_name":"baskpipe_db_secret"
+                },
+                "Next":"load_games"
+            },
+            "load_games":{
+                "Type":"Task",
+                "Resource":"${sql_execute_arn}",
+                "ResultPath": null,
+                "Parameters":{
+                    "s3_sql_path":"s3://baskpipe/sqls/dml/games_load.sql",
+                    "custom_params":{
+                        
+                    },
+                    "secret_name":"baskpipe_db_secret"
+                },
+                "Next":"load_team_stats"
+            },
+            "load_team_stats":{
+                "Type":"Parallel",
+                "Branches":[
+                    {
+                        "StartAt":"load_home_stats",
+                        "States":{
+                            "load_home_stats":{
+                                "Type":"Task",
+                                "Resource":"${sql_execute_arn}",
+                                "ResultPath": null,
+                                "Parameters":{
+                                    "s3_sql_path":"s3://baskpipe/sqls/dml/game_team_stats_home_load.sql",
+                                    "custom_params":{
+                                        
+                                    },
+                                    "secret_name":"baskpipe_db_secret"
+                                },
+                                "End":true
+                            }
+                        }
+                    },
+                    {
+                        "StartAt":"load_away_stats",
+                        "States":{
+                            "load_away_stats":{
+                                "Type":"Task",
+                                "Resource":"${sql_execute_arn}",
+                                "ResultPath": null,
+                                "Parameters":{
+                                    "s3_sql_path":"s3://baskpipe/sqls/dml/game_team_stats_away_load.sql",
+                                    "custom_params":{
+                                        
+                                    },
+                                    "secret_name":"baskpipe_db_secret"
+                                },
+                                "End":true
+                            }
+                        }
+                    }
+                ],
+                 "End": true
+            }
+          }
+        },
+        "End": true
+      }
+    }
+  }
+  
