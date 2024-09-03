@@ -36,5 +36,8 @@ create table if not exists game_team_stats (
 	blk_pct float,
 	tov_pct float,
 	off_rtg float,
-	def_rtg float
+	def_rtg float,
+
+	inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
 )

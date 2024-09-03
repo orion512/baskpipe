@@ -7,5 +7,8 @@ create table if not exists games (
 	game_time timestamp,
 	arena_name varchar(100),
 	playin_game boolean,
-	attendance integer
+	attendance integer,
+
+	inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
 )
