@@ -43,6 +43,7 @@ def scrape_games(date_of_games: date):
 def list_dicts_to_s3(data: list[dict], s3_path: str):
     """
     Writes a list of dictionaries to a CSV file and uploads it to S3.
+    Writes an empty CSV with no columns if data is empty.
 
     Parameters:
     data (list of dict): The data to write to the CSV. Each dictionary in the list represents a row.
@@ -51,21 +52,18 @@ def list_dicts_to_s3(data: list[dict], s3_path: str):
     Returns: None
     """
 
-    if len(data) == 0:
-        return
-
     if s3_path.startswith('s3://'):
         s3_path = s3_path[5:]
     bucket_name, key = s3_path.split('/', 1)
     
     s3 = boto3.client('s3')
-    
     csv_buffer = StringIO()
-    fieldnames = data[0].keys()
-    writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, quoting=csv.QUOTE_ALL)
-    
-    writer.writeheader()
-    writer.writerows(data)
+
+    if len(data) > 0:
+        fieldnames = data[0].keys()
+        writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, quoting=csv.QUOTE_ALL)
+        writer.writeheader()
+        writer.writerows(data)
     
     csv_buffer.seek(0)
     

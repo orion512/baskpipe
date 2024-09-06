@@ -88,3 +88,23 @@ resource "aws_iam_role_policy" "baskpipe_stepf_policy" {
     ]
   })
 }
+
+resource "aws_sns_topic_policy" "sns_publish_policy" {
+  arn = aws_sns_topic.sf_daily_baskref_notification.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "TrustCWEToPublishEventsToMyTopic",
+        Effect = "Allow",
+        Principal = {
+          Service = "events.amazonaws.com"
+        },
+        Action   = "sns:Publish",
+        Resource = aws_sns_topic.sf_daily_baskref_notification.arn
+      }
+    ]
+  })
+}
+
