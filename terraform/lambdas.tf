@@ -24,3 +24,17 @@ resource "aws_lambda_function" "sql_execute" {
     timeout = 900
 }
 
+resource "aws_lambda_function" "s3_to_postgres" {
+    function_name = "s3-to-postgres"
+    handler       = "lambda_function.lambda_handler"
+    runtime       = "python3.12"
+
+    s3_bucket = "baskpipe"
+    s3_key    = "lambdas/s3-to-postgres.zip"
+
+    # use same role as for SQL execute
+    role = aws_iam_role.sql_execute_role.arn
+
+    timeout = 900
+}
+

@@ -1,16 +1,24 @@
 """
 LAMBDA FOR INGESTING A FILE FROM S3 to POSTGRES
 
-how to call the function
+- it first reads the file 1st row of a file 
+and if its emptyit doesn't try the ingest
 
+how to call the function
 {
-    "s3_sql_path": "s3://my-bucket/path/to/sql_file.sql",
-    "custom_params": {"TABLE_NAME": "my_table"},
+    "s3_bucket": "baskpipe",
+    "s3_path": "data/daily_games",
+    "file_name": "file.csv",
+    "schema_name": "staging",
+    "table_name": "st_daily_games",
+    "copy_config": "(format csv,header true)",
+    "aws_region": "eu-west-2",
     "secret_name": "my_db_secret"
 }
 
 """
 
+import os
 import json
 import psycopg2
 import boto3
@@ -26,64 +34,111 @@ def get_db_credentials(secret_name):
         return json.loads(secret)
     except ClientError as e:
         raise Exception("Error fetching DB credentials: ", e)
-
-def fetch_sql_from_s3(s3_path):
-    """Fetches SQL query from a file stored in S3."""
-    s3 = boto3.client('s3')
-    bucket_name, key = s3_path.replace("s3://", "").split("/", 1)
     
-    try:
-        response = s3.get_object(Bucket=bucket_name, Key=key)
-        sql_query = response['Body'].read().decode('utf-8')
-        return sql_query
-    except ClientError as e:
-        raise Exception("Error fetching SQL from S3: ", e)
+
+def any_data_in_file(bucket, key):
+    """
+    Reads the first two lines of a file on S3.
+    A header row and the first line of data.
+    If the first or second row have no data it concludes 
+    the file is empty and returns False else True.
+    """
+
+    s3 = boto3.client('s3')
+
+    response = s3.get_object(Bucket=bucket, Key=key)
+
+    # Read the content of the file
+    streaming_body = response['Body']
+    
+    # Read the contents line by line using iter_lines()
+    line_count = 0
+    for line in streaming_body.iter_lines():
+        print('... reading line')
+        decoded_line = line.decode('utf-8')
+        if decoded_line.strip():
+            line_count += 1
+
+        if line_count == 2:
+            break
+
+    return line_count >= 2
+
 
 def lambda_handler(event, context):
-    """Executes a SQL query on the PostgreSQL database."""
-    if 'sql_query' not in event and 's3_sql_path' not in event:
-        raise ValueError('Event must contain "sql_query" or "s3_sql_path".')
+    """Executes a SQL to ingest a file from S3 t Postgres."""
     
-    sql_query = event.get('sql_query')
-    s3_sql_path = event.get('s3_sql_path')
-    custom_params = event.get('custom_params', {})
+    required_params = [
+        "s3_bucket", "s3_path", "file_name", "schema_name", "table_name",
+        "copy_config", "aws_region", "secret_name"
+    ]
 
-    # Fetch SQL from S3 if s3_sql_path is provided
-    if s3_sql_path:
-        sql_query = fetch_sql_from_s3(s3_sql_path)
+    missing_params = [param for param in required_params if param not in event or not event[param]]
 
-    # Safely insert custom parameters like table names
-    sql_query = sql_query.format(**custom_params)
+    if missing_params:
+        raise ValueError(f"The following required parameters are missing or empty: {', '.join(missing_params)}")
 
-    # Fetch database credentials
-    db_credentials = get_db_credentials(event['secret_name'])
+    
+    s3_bucket = event.get('s3_bucket')
+    s3_path = event.get('s3_path')
+    file_name = event.get('file_name')
+    schema_name = event.get('schema_name')
+    table_name = event.get('table_name')
+    copy_config = event.get('copy_config')
+    aws_region = event.get('aws_region')
 
-    try:
-        # Establish a database connection using a context manager
-        with psycopg2.connect(
-            host=db_credentials['host'],
-            user=db_credentials['username'],
-            password=db_credentials['password'],
-            database=db_credentials['dbname']
-        ) as connection:
-            with connection.cursor() as cursor:
-                # Execute the SQL query
-                cursor.execute(sql_query)
+    full_s3_path = os.path.join(s3_path, file_name)
 
-                # Check if it's a SELECT query
-                if cursor.description is not None:
-                    result = cursor.fetchall()  # Fetch all results
+    # any data in file
+    if any_data_in_file(s3_bucket, full_s3_path):
+
+        # Fetch database credentials
+        db_credentials = get_db_credentials(event['secret_name'])
+
+        sql_template = """
+            select aws_s3.table_import_from_s3(
+            '{}.{}',
+            '', 
+            '{}',
+            aws_commons.create_s3_uri(
+                    '{}',
+                    '{}',
+                    '{}'
+                )
+            );
+        """
+
+        sql_query = sql_template.format(
+            schema_name, table_name,
+            copy_config,
+            s3_bucket,
+            full_s3_path,
+            aws_region
+        )
+
+        try:
+            # Establish a database connection using a context manager
+            with psycopg2.connect(
+                host=db_credentials['host'],
+                user=db_credentials['username'],
+                password=db_credentials['password'],
+                database=db_credentials['dbname']
+            ) as connection:
+                with connection.cursor() as cursor:
+                    # Execute the SQL query
+                    cursor.execute(sql_query)
+
+                    result = cursor.fetchall()
                     response_text = f"SQL query executed succesfully. Result set length: {len(result)}. Here are first 5 rows {result[:5]}"
-                else:
-                    response_text = f"SQL query executed succesfully. No result set returned. Query was probably a DDL/DML operation."
 
-            # Commit the transaction for non-SELECT queries like INSERT, UPDATE, DELETE
-            connection.commit()
+                connection.commit()
 
-    except Exception as e:
-        raise Exception(f"Database query execution failed: {e}")
+        except Exception as e:
+            raise Exception(f"Database query execution failed: {e}")
 
-    print(response_text)
+    else:
+        response_text = f'No data detected in {s3_bucket}/{full_s3_path}'
+        print(response_text)
 
     # Return the result of the query
     return {

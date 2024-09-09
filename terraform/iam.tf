@@ -1,3 +1,8 @@
+
+#####################################################################
+############## LAMBDA - SQL EXECUTE ROLE ############################
+#####################################################################
+
 resource "aws_iam_role" "sql_execute_role" {
   name = "sql-execute-role"
 
@@ -29,6 +34,10 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
   role       = aws_iam_role.sql_execute_role.name
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
 }
+
+#####################################################################
+############## STEP FUNCTION - BASKPIPE ROLE ########################
+#####################################################################
 
 resource "aws_iam_role" "baskpipe_stepf_role" {
   name = "baskpipe-stepf-role"
@@ -75,7 +84,8 @@ resource "aws_iam_role_policy" "baskpipe_stepf_policy" {
         ],
         Resource = [
           "${aws_lambda_function.baskpipe_daily_scrape.arn}",
-          "${aws_lambda_function.sql_execute.arn}"
+          "${aws_lambda_function.sql_execute.arn}",
+          "${aws_lambda_function.s3_to_postgres.arn}"
         ]
       },
       {
@@ -88,6 +98,10 @@ resource "aws_iam_role_policy" "baskpipe_stepf_policy" {
     ]
   })
 }
+
+#####################################################################
+############## SNS - POLICY #########################################
+#####################################################################
 
 resource "aws_sns_topic_policy" "sns_publish_policy" {
   arn = aws_sns_topic.sf_daily_baskref_notification.arn

@@ -39,9 +39,9 @@ baskpipe_db_password = "YOUR_PASSWORD"
 # Folder Structure
 
 # DB - SQL
-Upload all SQLs to S3 to be used by AWS services.
+Sync all SQLs to S3 to be used by AWS services.
 ```
-aws s3 cp ./db s3://baskpipe/sqls/ --recursive --profile per-iac-man
+aws s3 sync ./db s3://baskpipe/sqls/ --delete --profile per-iac-man
 ```
 
 In the future potentially create a GH action whcih moves ./db folder to S3 on push to main.
