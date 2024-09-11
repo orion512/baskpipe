@@ -17,8 +17,7 @@
                     "s3_sql_path":"s3://baskpipe/sqls/ddl/st_daily_games.sql",
                     "custom_params":{
                         
-                    },
-                    "secret_name":"baskpipe_db_secret"
+                    }
                 },
                 "Next":"load_staging"
             },
@@ -33,8 +32,7 @@
                     "schema_name": "staging",
                     "table_name": "st_daily_games",
                     "copy_config": "(format csv,header true)",
-                    "aws_region": "eu-west-2",
-                    "secret_name": "baskpipe_db_secret"
+                    "aws_region": "eu-west-2"
                 },
                 "Next":"load_teams"
             },
@@ -46,8 +44,7 @@
                     "s3_sql_path":"s3://baskpipe/sqls/dml/teams_load.sql",
                     "custom_params":{
                         
-                    },
-                    "secret_name":"baskpipe_db_secret"
+                    }
                 },
                 "Next":"load_games"
             },
@@ -59,8 +56,7 @@
                     "s3_sql_path":"s3://baskpipe/sqls/dml/games_load.sql",
                     "custom_params":{
                         
-                    },
-                    "secret_name":"baskpipe_db_secret"
+                    }
                 },
                 "Next":"load_team_stats"
             },
@@ -78,8 +74,7 @@
                                     "s3_sql_path":"s3://baskpipe/sqls/dml/game_team_stats_home_load.sql",
                                     "custom_params":{
                                         
-                                    },
-                                    "secret_name":"baskpipe_db_secret"
+                                    }
                                 },
                                 "End":true
                             }
@@ -96,8 +91,7 @@
                                     "s3_sql_path":"s3://baskpipe/sqls/dml/game_team_stats_away_load.sql",
                                     "custom_params":{
                                         
-                                    },
-                                    "secret_name":"baskpipe_db_secret"
+                                    }
                                 },
                                 "End":true
                             }

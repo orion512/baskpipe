@@ -1,10 +1,10 @@
 
 #####################################################################
-############## LAMBDA - SQL EXECUTE ROLE ############################
+############## LAMBDA - ROLEs #######################################
 #####################################################################
 
-resource "aws_iam_role" "sql_execute_role" {
-  name = "sql-execute-role"
+resource "aws_iam_role" "baskpipe_lambda_role" {
+  name = "baskpipe-lambda-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -21,19 +21,53 @@ resource "aws_iam_role" "sql_execute_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
-  role       = aws_iam_role.sql_execute_role.name
+  role       = aws_iam_role.baskpipe_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 resource "aws_iam_role_policy_attachment" "s3_full_access" {
-  role       = aws_iam_role.sql_execute_role.name
+  role       = aws_iam_role.baskpipe_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "secrets_manager_access" {
-  role       = aws_iam_role.sql_execute_role.name
+  role       = aws_iam_role.baskpipe_lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
 }
+
+resource "aws_iam_role" "baskpipe_lambda_trigger_role" {
+  name = "baskpipe-lambda-trigger-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "baskpipe_lambda_trigger_policy" {
+  name = "baskpipe-lambda-trigger-policy"
+  role = aws_iam_role.baskpipe_lambda_trigger_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "states:StartExecution"
+        Resource = aws_sfn_state_machine.baskpipe_daily_games_baskref.arn
+      }
+    ]
+  })
+}
+
 
 #####################################################################
 ############## STEP FUNCTION - BASKPIPE ROLE ########################
@@ -85,7 +119,8 @@ resource "aws_iam_role_policy" "baskpipe_stepf_policy" {
         Resource = [
           "${aws_lambda_function.baskpipe_daily_scrape.arn}",
           "${aws_lambda_function.sql_execute.arn}",
-          "${aws_lambda_function.s3_to_postgres.arn}"
+          "${aws_lambda_function.s3_to_postgres.arn}",
+          "${aws_lambda_function.trigger_daily_scrape.arn}"
         ]
       },
       {

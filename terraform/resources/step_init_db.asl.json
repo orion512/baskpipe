@@ -10,8 +10,7 @@
                 "s3_sql_path":"s3://baskpipe/sqls/ddl/init_db.sql",
                 "custom_params":{
                     
-                },
-                "secret_name":"baskpipe_db_secret"
+                }
             },
             "Next":"init_tables"
         },
@@ -29,8 +28,7 @@
                                 "s3_sql_path":"s3://baskpipe/sqls/ddl/games.sql",
                                 "custom_params":{
                                     
-                                },
-                                "secret_name":"baskpipe_db_secret"
+                                }
                             },
                             "End":true
                         }
@@ -47,8 +45,7 @@
                                 "s3_sql_path":"s3://baskpipe/sqls/ddl/teams.sql",
                                 "custom_params":{
                                     
-                                },
-                                "secret_name":"baskpipe_db_secret"
+                                }
                             },
                             "End":true
                         }
@@ -65,8 +62,7 @@
                 "s3_sql_path":"s3://baskpipe/sqls/ddl/game_team_stats.sql",
                 "custom_params":{
                     
-                },
-                "secret_name":"baskpipe_db_secret"
+                }
             },
             "End":true
         }

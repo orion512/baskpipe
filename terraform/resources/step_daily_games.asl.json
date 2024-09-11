@@ -1,26 +1,7 @@
 {
    "Comment":"This is a pipeline for fetching, storing and procesing daily nba games.",
-   "StartAt":"check_date_provided",
+   "StartAt":"get_data_scrape",
    "States":{
-        "check_date_provided": {
-            "Type": "Choice",
-            "Choices": [
-                {
-                    "Variable": "$.date_day",
-                    "IsPresent": true,
-                    "Next": "get_data_scrape"
-                }
-            ],
-            "Default": "set_input_date"
-        },
-        "set_input_date": {
-            "Type": "Pass",
-            "Result": {
-                "date_day.$": "States.Format('{:%Y-%m-%d}', States.TimestampAdd('$$.Execution.StartTime', -1, 'Days'))"
-            },
-            "ResultPath": "$.date_day",
-            "Next": "get_data_scrape"
-        },
        "get_data_scrape":{
            "Type":"Task",
            "Resource":"${baskpipe_daily_scrape_arn}",
@@ -39,8 +20,7 @@
                "s3_sql_path":"s3://baskpipe/sqls/ddl/st_daily_games.sql",
                "custom_params":{
                    
-               },
-               "secret_name":"baskpipe_db_secret"
+               }
            },
            "Next":"load_staging"
        },
@@ -55,8 +35,7 @@
                "schema_name": "staging",
                "table_name": "st_daily_games",
                "copy_config": "(format csv,header true)",
-               "aws_region": "eu-west-2",
-               "secret_name": "baskpipe_db_secret"
+               "aws_region": "eu-west-2"
            },
            "Next":"load_public"
        },
@@ -74,8 +53,7 @@
                                "s3_sql_path":"s3://baskpipe/sqls/dml/games_load.sql",
                                "custom_params":{
                                    
-                               },
-                               "secret_name":"baskpipe_db_secret"
+                               }
                            },
                            "End":true
                        }
@@ -92,8 +70,7 @@
                                "s3_sql_path":"s3://baskpipe/sqls/dml/teams_load.sql",
                                "custom_params":{
                                    
-                               },
-                               "secret_name":"baskpipe_db_secret"
+                               }
                            },
                            "End":true
                        }
@@ -119,8 +96,7 @@
                                "s3_sql_path":"s3://baskpipe/sqls/dml/game_team_stats_home_load.sql",
                                "custom_params":{
                                    
-                               },
-                               "secret_name":"baskpipe_db_secret"
+                               }
                            },
                            "End":true
                        }
@@ -137,8 +113,7 @@
                                "s3_sql_path":"s3://baskpipe/sqls/dml/game_team_stats_away_load.sql",
                                "custom_params":{
                                    
-                               },
-                               "secret_name":"baskpipe_db_secret"
+                               }
                            },
                            "End":true
                        }

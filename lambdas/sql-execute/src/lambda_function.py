@@ -5,12 +5,12 @@ how to call the function
 
 {
     "s3_sql_path": "s3://my-bucket/path/to/sql_file.sql",
-    "custom_params": {"TABLE_NAME": "my_table"},
-    "secret_name": "my_db_secret"
+    "custom_params": {"TABLE_NAME": "my_table"}
 }
 
 """
 
+import os
 import json
 import psycopg2
 import boto3
@@ -56,7 +56,7 @@ def lambda_handler(event, context):
     sql_query = sql_query.format(**custom_params)
 
     # Fetch database credentials
-    db_credentials = get_db_credentials(event['secret_name'])
+    db_credentials = get_db_credentials(os.getenv('DB_SECRET_NAME'))
 
     try:
         # Establish a database connection using a context manager

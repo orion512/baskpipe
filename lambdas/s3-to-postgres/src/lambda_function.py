@@ -12,8 +12,7 @@ how to call the function
     "schema_name": "staging",
     "table_name": "st_daily_games",
     "copy_config": "(format csv,header true)",
-    "aws_region": "eu-west-2",
-    "secret_name": "my_db_secret"
+    "aws_region": "eu-west-2"
 }
 
 """
@@ -70,7 +69,7 @@ def lambda_handler(event, context):
     
     required_params = [
         "s3_bucket", "s3_path", "file_name", "schema_name", "table_name",
-        "copy_config", "aws_region", "secret_name"
+        "copy_config", "aws_region"
     ]
 
     missing_params = [param for param in required_params if param not in event or not event[param]]
@@ -93,7 +92,7 @@ def lambda_handler(event, context):
     if any_data_in_file(s3_bucket, full_s3_path):
 
         # Fetch database credentials
-        db_credentials = get_db_credentials(event['secret_name'])
+        db_credentials = get_db_credentials(os.getenv('DB_SECRET_NAME'))
 
         sql_template = """
             select aws_s3.table_import_from_s3(
