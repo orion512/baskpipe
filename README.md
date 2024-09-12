@@ -1,15 +1,16 @@
 # Baskpipe (Basketball Data Pipeline)
 A fully AWS native data pipeline.
-
-# What does it do?
-
+....some text on what it does...
 
 # How to use it?
+Make sure you first follow the setup.
 
 Init DB has to happen first.
 
 
-# Terraform
+# Setup
+
+## Infrastructure on AWS with Terraform
 
 In order to use, you need to navigate into the terraform folder.
 ```
@@ -35,14 +36,20 @@ In the file define your DB password.
 baskpipe_db_password = "YOUR_PASSWORD"
 ```
 
+## Sync code change with Terraform
 
-# Folder Structure
+### GitHub Actions
+First you need to add AWS Credentials to GitHub Secrets:
+- Go to your GitHub repository.
+- Click on "Settings" → "Secrets and variables" → "Actions".
+- Click on "New repository secret".
+- Add the following secrets:
+    - Name: AWS_ACCESS_KEY_ID, Value: your AWS access key.
+    - Name: AWS_SECRET_ACCESS_KEY, Value: your AWS secret access key.
+    - Name: AWS_REGION, Value: your AWS region.
 
-# DB - SQL
+### Manual
 Sync all SQLs to S3 to be used by AWS services.
 ```
 aws s3 sync ./db s3://baskpipe/sqls/ --delete --profile per-iac-man
 ```
-
-In the future potentially create a GH action whcih moves ./db folder to S3 on push to main.
-
