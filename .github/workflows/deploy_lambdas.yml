@@ -1,0 +1,40 @@
+name: Deploy Lambdas to AWS
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy_lambdas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Find changed lambdas
+        id: changes
+        run: |
+          echo "Detecting changes in lambdas folder..."
+          changed_lambdas=$(git diff --name-only HEAD^ HEAD | grep '^lambdas/' | cut -d '/' -f 2 | sort -u)
+          echo "Changed lambdas: $changed_lambdas"
+          echo "::set-output name=changed_lambdas::$changed_lambdas"
+
+      - name: Deploy changed lambdas
+        if: steps.changes.outputs.changed_lambdas != ''
+        run: |
+          for lambda in $(echo ${{ steps.changes.outputs.changed_lambdas }}); do
+            echo "Deploying $lambda..."
+            ./lambdas/deploy.sh $lambda
+          done

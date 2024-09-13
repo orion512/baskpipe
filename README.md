@@ -37,6 +37,9 @@ baskpipe_db_password = "YOUR_PASSWORD"
 ```
 
 ## Sync code change with Terraform
+There are two pieces of code that need to be synced with AWS:
+- contents of DB folder needs to be uploaded to S3
+- every lambda function needs to be built, zipped, uploaded to S3 and update the lambda
 
 ### GitHub Actions
 First you need to add AWS Credentials to GitHub Secrets:
@@ -53,3 +56,11 @@ Sync all SQLs to S3 to be used by AWS services.
 ```
 aws s3 sync ./db s3://baskpipe/sqls/ --delete --profile per-iac-man
 ```
+
+Deploy a lambda
+```
+./lambdas/deploy.sh LAMBDA_NAME OPTIONAL_PROFILE
+./lambdas/deploy.sh s3-to-postgres per-iac-man
+```
+
+chmod +x ./lambdas/deploy.sh
