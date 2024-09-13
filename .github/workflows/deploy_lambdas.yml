@@ -27,9 +27,10 @@ jobs:
         id: changes
         run: |
           echo "Detecting changes in lambdas folder..."
-          changed_lambdas=$(git diff --name-only HEAD^ HEAD | grep '^lambdas/' | cut -d '/' -f 2 | sort -u)
+          base_ref=$(git merge-base origin/main HEAD)
+          changed_lambdas=$(git diff --name-only $base_ref HEAD | grep '^lambdas/' | cut -d '/' -f 2 | sort -u)
           echo "Changed lambdas: $changed_lambdas"
-          echo "$changed_lambdas" >> $GITHUB_ENV
+          echo "changed_lambdas=$changed_lambdas" >> $GITHUB_ENV
 
       - name: Deploy changed lambdas
         if: env.changed_lambdas != ''
