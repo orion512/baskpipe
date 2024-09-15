@@ -16,7 +16,7 @@ import json
 import boto3
 from botocore.exceptions import ClientError
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'psycopg2-3.11'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'psycopg2-3.11/psycopg2'))
 import psycopg2
 
 def get_db_credentials(secret_name):
