@@ -27,5 +27,5 @@ jobs:
         run: |
           for lambda in $(find lambdas -mindepth 1 -maxdepth 1 -type d); do
             echo "Deploying $(basename $lambda)..."
-            ./lambdas/$(basename $lambda)/deploy.sh
+            ./lambdas/deploy.sh $(basename $lambda)
           done
