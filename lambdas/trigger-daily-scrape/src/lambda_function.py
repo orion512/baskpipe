@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     # Calculate yesterday's date
     yesterday = datetime.utcnow() - timedelta(days=1)
     date_day = yesterday.strftime('%Y-%m-%d')
-    print(f'yesterdays date is: {date_day}')
+    print(f"yesterday's date is: {date_day}")
     
     # Step Function input
     input_data = {"date_day": date_day}

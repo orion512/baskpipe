@@ -27,8 +27,7 @@ jobs:
         id: changes
         run: |
           echo "Detecting changes in lambdas folder..."
-          base_ref=$(git merge-base origin/main HEAD)
-          changed_lambdas=$(git diff --name-only $base_ref HEAD | grep '^lambdas/' | cut -d '/' -f 2 | sort -u)
+          changed_lambdas=$(git diff --name-only HEAD^ HEAD | grep '^lambdas/' | cut -d '/' -f 2 | sort -u)
           echo "Changed lambdas: $changed_lambdas"
           echo "changed_lambdas=$changed_lambdas" >> $GITHUB_ENV
 
@@ -37,5 +36,5 @@ jobs:
         run: |
           for lambda in $(echo ${{ env.changed_lambdas }}); do
             echo "Deploying $lambda..."
-            ./lambdas/deploy.sh $lambda
+            ./lambdas/$lambda/deploy.sh
           done
