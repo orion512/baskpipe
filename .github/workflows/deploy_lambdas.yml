@@ -23,32 +23,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Fetch tags
-        run: git fetch --tags
-
-      - name: Find changed lambdas since last deployment
-        id: changes
+      - name: Deploy all lambdas
         run: |
-          echo "Detecting changes in lambdas folder..."
-          if git rev-parse last-deploy >/dev/null 2>&1; then
-            base_ref=$(git rev-parse last-deploy)
-          else
-            base_ref=$(git rev-list --max-parents=0 HEAD)  # First commit if no tag found
-          fi
-          changed_lambdas=$(git diff --name-only $base_ref HEAD | grep '^lambdas/' | cut -d '/' -f 2 | sort -u)
-          echo "Changed lambdas: $changed_lambdas"
-          echo "changed_lambdas=$changed_lambdas" >> $GITHUB_ENV
-
-      - name: Deploy changed lambdas
-        if: env.changed_lambdas != ''
-        run: |
-          for lambda in $(echo ${{ env.changed_lambdas }}); do
-            echo "Deploying $lambda..."
-            ./lambdas/$lambda/deploy.sh
+          for lambda in $(find lambdas -mindepth 1 -maxdepth 1 -type d); do
+            echo "Deploying $(basename $lambda)..."
+            ./lambdas/$(basename $lambda)/deploy.sh
           done
-
-      - name: Tag new deployment
-        if: env.changed_lambdas != ''
-        run: |
-          git tag -f last-deploy
-          git push --tags --force
