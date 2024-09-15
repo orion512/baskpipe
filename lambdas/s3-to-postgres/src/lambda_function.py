@@ -18,10 +18,13 @@ how to call the function
 """
 
 import os
+import sys
 import json
-import psycopg2
 import boto3
 from botocore.exceptions import ClientError
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'psycopg2-3.11'))
+import psycopg2
 
 def get_db_credentials(secret_name):
     """Fetches database credentials from AWS Secrets Manager."""
