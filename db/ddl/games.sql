@@ -9,6 +9,11 @@ create table if not exists games (
 	playin_game boolean,
 	attendance integer,
 
+	playoff_game boolean,
+	playoff_conference varchar(4) CHECK (playoff_conference IN ('East', 'West')),
+	playoff_round varchar(50) CHECK (playoff_round IN ('First Round', 'Conference Semifinals', 'Conference Finals', 'Nba Finals')),
+	playoff_game_number int CHECK (playoff_game_number BETWEEN 1 AND 7),
+
 	inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP
 )
