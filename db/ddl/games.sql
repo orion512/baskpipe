@@ -4,6 +4,7 @@ create table if not exists games (
 	br_game_id varchar(50),
 	br_game_url text,
 
+	season int,
 	game_time timestamp,
 	arena_name varchar(100),
 	attendance integer,

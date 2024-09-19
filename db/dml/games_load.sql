@@ -2,6 +2,7 @@ INSERT INTO public.games (br_game_id, br_game_url, game_time, arena_name, attend
 select
 	upper(trim(game_id)) as br_game_id,
 	trim(game_url) as br_game_url,
+	
 	game_time::timestamp,
 	initcap(trim(arena_name)) as arena_name,
 	attendance::int,
