@@ -14,8 +14,8 @@ select
 	NULLIF(attendance, '')::int,
 	playin_game::bool,
 	playoff_game::bool,
-	trim(lower(playoff_conference)) as playoff_conference,
-	trim(lower(playoff_round)) as playoff_round,
+	nullif(trim(lower(playoff_conference)), '') as playoff_conference,
+	nullif(trim(lower(playoff_round)), '') as playoff_round,
 	NULLIF(trim(playoff_game_number), '')::int as playoff_game_number
 from staging.st_daily_games sdg
 where not exists (
