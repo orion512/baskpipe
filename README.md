@@ -64,3 +64,10 @@ Deploy a lambda
 ```
 
 chmod +x ./lambdas/deploy.sh
+
+### Code Formatting
+black .
+pylint --recursive=y ./
+
+is there a way to not allow to commit if not installed
+pre-commit install

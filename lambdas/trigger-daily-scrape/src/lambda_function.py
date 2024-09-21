@@ -8,35 +8,32 @@ how to call the function
 
 """
 
-import os
 import json
+import os
 from datetime import datetime, timedelta
+
 import boto3
 
 
 def lambda_handler(event, context):
-    """ Calculated yesterday's date and triggers AWS step."""
-    
+    """Calculated yesterday's date and triggers AWS step."""
+
     # Calculate yesterday's date
     yesterday = datetime.utcnow() - timedelta(days=1)
-    date_day = yesterday.strftime('%Y-%m-%d')
+    date_day = yesterday.strftime("%Y-%m-%d")
     print(f"yesterday's date is: {date_day}")
-    
+
     # Step Function input
     input_data = {"date_day": date_day}
 
     # Get the Step Function ARN from the environment variable
-    state_machine_arn = os.getenv('STEP_FUNCTION_ARN')
-    
+    state_machine_arn = os.getenv("STEP_FUNCTION_ARN")
+
     # Start Step Function
-    client = boto3.client('stepfunctions')
-    
+    client = boto3.client("stepfunctions")
+
     response = client.start_execution(
-        stateMachineArn=state_machine_arn,
-        input=json.dumps(input_data)
+        stateMachineArn=state_machine_arn, input=json.dumps(input_data)
     )
-    
-    return {
-        'statusCode': 200,
-        'body': json.dumps(response, default=str)
-    }
+
+    return {"statusCode": 200, "body": json.dumps(response, default=str)}

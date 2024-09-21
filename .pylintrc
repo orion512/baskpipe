@@ -1,0 +1,14 @@
+[MAIN]
+ignore=venv
+ignore-patterns=psycopg2-3.11
+
+[MESSAGES CONTROL]
+disable=fixme,too-few-public-methods,logging-fstring-interpolation,wrong-import-position
+
+[FORMAT]
+max-line-length=79
+
+[BASIC]
+
+# Good variable names which should always be accepted, separated by a comma
+good-names=p,td,tr,a,
