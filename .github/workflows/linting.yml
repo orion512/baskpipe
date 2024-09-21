@@ -23,7 +23,7 @@ jobs:
         black --check .
     - name: Sort imports with isort
       run: |
-        isort --check-only $(git ls-files '*.py')
+        isort --check-only .
     - name: Lint with Pylint
       run: |
         pylint $(git ls-files '*.py')
