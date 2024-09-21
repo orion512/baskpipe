@@ -20,7 +20,7 @@ jobs:
         pip install -r requirements_dev.txt
     - name: Format with Black
       run: |
-        black --check $(git ls-files '*.py')
+        black --check .
     - name: Sort imports with isort
       run: |
         isort --check-only $(git ls-files '*.py')
