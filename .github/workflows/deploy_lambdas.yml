@@ -10,6 +10,7 @@ on:
 
 jobs:
   deploy_lambdas:
+    needs: lint
     runs-on: ubuntu-latest
 
     steps:
