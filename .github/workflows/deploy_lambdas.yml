@@ -1,6 +1,10 @@
 name: Deploy Lambdas to AWS
 
 on:
+  workflow_run:
+    workflows: ["Linting"]
+    types:
+      - completed
   push:
     branches:
       - main
@@ -10,7 +14,7 @@ on:
 
 jobs:
   deploy_lambdas:
-    needs: lint
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
