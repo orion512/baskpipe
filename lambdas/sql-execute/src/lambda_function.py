@@ -20,7 +20,7 @@ from botocore.exceptions import ClientError
 sys.path.append(os.path.join(os.path.dirname(__file__), "psycopg2-3.11"))
 import psycopg2
 
-
+# pylint: disable=duplicate-code
 def get_db_credentials(secret_name):
     """Fetches database credentials from AWS Secrets Manager."""
     client = boto3.client("secretsmanager")
@@ -32,7 +32,7 @@ def get_db_credentials(secret_name):
         secret = get_secret_value_response["SecretString"]
         return json.loads(secret)
     except ClientError as e:
-        raise Exception("Error fetching DB credentials: ", e)
+        raise RuntimeError("Error fetching DB credentials: ", e) from e
 
 
 def fetch_sql_from_s3(s3_path):
@@ -45,10 +45,10 @@ def fetch_sql_from_s3(s3_path):
         sql_query = response["Body"].read().decode("utf-8")
         return sql_query
     except ClientError as e:
-        raise Exception("Error fetching SQL from S3: ", e)
+        raise RuntimeError("Error fetching SQL from S3: ", e) from e
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context):  # pylint: disable=unused-argument
     """Executes a SQL query on the PostgreSQL database."""
     if "sql_query" not in event and "s3_sql_path" not in event:
         raise ValueError('Event must contain "sql_query" or "s3_sql_path".')
@@ -97,7 +97,7 @@ def lambda_handler(event, context):
             connection.commit()
 
     except Exception as e:
-        raise Exception(f"Database query execution failed: {e}")
+        raise RuntimeError(f"Database query execution failed: {e}") from e
 
     print(response_text)
 

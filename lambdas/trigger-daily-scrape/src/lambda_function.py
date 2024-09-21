@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 import boto3
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context):  # pylint: disable=unused-argument
     """Calculated yesterday's date and triggers AWS step."""
 
     # Calculate yesterday's date

@@ -70,7 +70,7 @@ def list_dicts_to_s3(data: list[dict], s3_path: str):
     s3.put_object(Bucket=bucket_name, Key=key, Body=csv_buffer.getvalue())
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context):  # pylint: disable=unused-argument
     """
     Processes games data by scraping and storing it in S3.
 
@@ -116,7 +116,8 @@ def lambda_handler(event, context):
         list_dicts_to_s3(list_of_games, full_s3_path)
     except Exception as err:
         print(err)
-        raise RuntimeError("Something went wrong with writing data to S3.")
+        raise RuntimeError(
+            "Something went wrong with writing data to S3.") from err
 
     return {
         "statusCode": 200,

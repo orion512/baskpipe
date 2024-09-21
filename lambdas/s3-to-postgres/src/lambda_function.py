@@ -19,16 +19,15 @@ how to call the function
 
 import json
 import os
+import sys
 
 import boto3
 from botocore.exceptions import ClientError
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "psycopg2-3.11"))
-import sys
-
 import psycopg2
 
-
+# pylint: disable=duplicate-code
 def get_db_credentials(secret_name):
     """Fetches database credentials from AWS Secrets Manager."""
     client = boto3.client("secretsmanager")
@@ -40,7 +39,7 @@ def get_db_credentials(secret_name):
         secret = get_secret_value_response["SecretString"]
         return json.loads(secret)
     except ClientError as e:
-        raise Exception("Error fetching DB credentials: ", e)
+        raise ClientError("Error fetching DB credentials: ", e) from e
 
 
 def any_data_in_file(bucket, key):
@@ -72,7 +71,7 @@ def any_data_in_file(bucket, key):
     return line_count >= 2
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, context):  # pylint: disable=unused-argument
     """Executes a SQL to ingest a file from S3 t Postgres."""
 
     required_params = [
@@ -157,7 +156,7 @@ def lambda_handler(event, context):
                 connection.commit()
 
         except Exception as e:
-            raise Exception(f"Database query execution failed: {e}")
+            raise RuntimeError(f"Database query execution failed: {e}") from e
 
     else:
         response_text = f"No data detected in {s3_bucket}/{full_s3_path}"
