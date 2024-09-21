@@ -117,7 +117,8 @@ def lambda_handler(event, context):  # pylint: disable=unused-argument
     except Exception as err:
         print(err)
         raise RuntimeError(
-            "Something went wrong with writing data to S3.") from err
+            "Something went wrong with writing data to S3."
+        ) from err
 
     return {
         "statusCode": 200,

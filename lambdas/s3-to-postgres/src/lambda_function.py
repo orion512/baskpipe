@@ -27,6 +27,7 @@ from botocore.exceptions import ClientError
 sys.path.append(os.path.join(os.path.dirname(__file__), "psycopg2-3.11"))
 import psycopg2
 
+
 # pylint: disable=duplicate-code
 def get_db_credentials(secret_name):
     """Fetches database credentials from AWS Secrets Manager."""
@@ -71,6 +72,57 @@ def any_data_in_file(bucket, key):
     return line_count >= 2
 
 
+def sql_s3_to_pg(sql_template_params: dict):
+    """Executes the SQL query to ingest a file from S3 to Postgres."""
+    db_credentials = get_db_credentials(os.getenv("DB_SECRET_NAME"))
+
+    sql_template = """
+        select aws_s3.table_import_from_s3(
+        '{}.{}',
+        '', 
+        '{}',
+        aws_commons.create_s3_uri(
+                '{}',
+                '{}',
+                '{}'
+            )
+        );
+    """
+
+    sql_query = sql_template.format(
+        sql_template_params["schema_name"],
+        sql_template_params["table_name"],
+        sql_template_params["copy_config"],
+        sql_template_params["s3_bucket"],
+        sql_template_params["full_s3_path"],
+        sql_template_params["aws_region"],
+    )
+
+    try:
+        with psycopg2.connect(
+            host=db_credentials["host"],
+            user=db_credentials["username"],
+            password=db_credentials["password"],
+            database=db_credentials["dbname"],
+        ) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(sql_query)
+
+                result = cursor.fetchall()
+                response_text = (
+                    f"SQL query executed successfully. Result set "
+                    f"length: {len(result)}. "
+                    f"Here are first 5 rows {result[:5]}"
+                )
+
+            connection.commit()
+
+    except Exception as e:
+        raise RuntimeError(f"Database query execution failed: {e}") from e
+
+    return response_text
+
+
 def lambda_handler(event, context):  # pylint: disable=unused-argument
     """Executes a SQL to ingest a file from S3 t Postgres."""
 
@@ -109,54 +161,16 @@ def lambda_handler(event, context):  # pylint: disable=unused-argument
     # any data in file
     if any_data_in_file(s3_bucket, full_s3_path):
 
-        # Fetch database credentials
-        db_credentials = get_db_credentials(os.getenv("DB_SECRET_NAME"))
-
-        sql_template = """
-            select aws_s3.table_import_from_s3(
-            '{}.{}',
-            '', 
-            '{}',
-            aws_commons.create_s3_uri(
-                    '{}',
-                    '{}',
-                    '{}'
-                )
-            );
-        """
-
-        sql_query = sql_template.format(
-            schema_name,
-            table_name,
-            copy_config,
-            s3_bucket,
-            full_s3_path,
-            aws_region,
+        response_text = sql_s3_to_pg(
+            {
+                "schema_name": schema_name,
+                "table_name": table_name,
+                "copy_config": copy_config,
+                "s3_bucket": s3_bucket,
+                "full_s3_path": full_s3_path,
+                "aws_region": aws_region,
+            }
         )
-
-        try:
-            # Establish a database connection using a context manager
-            with psycopg2.connect(
-                host=db_credentials["host"],
-                user=db_credentials["username"],
-                password=db_credentials["password"],
-                database=db_credentials["dbname"],
-            ) as connection:
-                with connection.cursor() as cursor:
-                    # Execute the SQL query
-                    cursor.execute(sql_query)
-
-                    result = cursor.fetchall()
-                    response_text = (
-                        f"SQL query executed succesfully. Result set "
-                        f"length: {len(result)}. "
-                        f"Here are first 5 rows {result[:5]}"
-                    )
-
-                connection.commit()
-
-        except Exception as e:
-            raise RuntimeError(f"Database query execution failed: {e}") from e
 
     else:
         response_text = f"No data detected in {s3_bucket}/{full_s3_path}"
