@@ -26,4 +26,4 @@ jobs:
         isort --check-only .
     - name: Lint with Pylint
       run: |
-        pylint $(git ls-files '*.py')
+        pylint --recursive=y ./
