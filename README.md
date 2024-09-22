@@ -1,21 +1,106 @@
 # Baskpipe (Basketball Data Pipeline)
 
-Fully AWS native data pipelines for processing basketball (NBA) data.
+Fully AWS-native data pipelines for processing basketball (NBA) data.
 
-# Setup
+## Setup
 
-The entire AWS infrastrucutre is controlled by Terraform.
+The entire AWS infrastructure is managed with Terraform. Follow the steps below to set it up from scratch.
 
-## Infrastructure on AWS with Terraform
+### Enter AWS Details
 
-- setup credentials
-- setup variables
-- run terraform (it will fail)
-- upload lambdas
-- run terraform again
-- upload db
-- run initdb pipeline
+- Create a `main.tf` file (copy the template from `main.tf.example`). Fill it with your AWS credentials.
+- Create a `terraform.tvars` file (copy the template from `terraform.tvars.example`). Fill it with your AWS details (e.g., DB password, region).
 
+Both files are gitignored.
+
+### Run Terraform
+
+Once the files are set up, you can run Terraform. Navigate to the `terraform` folder:
+```
+cd terraform
+```
+
+Initialize the state and plan, which should result in creating many new resources (~40 as of Sep 22nd, 2024):
+
+```
+terraform init
+terraform plan
+```
+
+Then apply the changes:
+
+```
+terraform apply
+```
+Enter 'yes' when prompted.
+
+It will run for a while, adding many resources, but eventually, it will fail due to missing S3 paths for the Lambdas. The automation for this is not fully set up yet, so a workaround is needed.
+
+### Workaround to upload lambdas
+
+This step is only required during the initial project setup. The CI/CD pipeline for Lambdas is automated for future updates. Normally, the `lambdas/deploy.sh` script is used to package, upload, and register the new Lambdas, but it requires the Lambdas to already exist in your AWS account.
+
+To resolve this, open `lambdas/deploy.sh` and comment out the following code:
+```
+# Upload to S3
+if [ -z "$PROFILE" ]; then
+  aws s3 cp ../../../$LAMBDA_NAME.zip s3://baskpipe/lambdas/$LAMBDA_NAME.zip
+else
+  aws s3 cp ../../../$LAMBDA_NAME.zip s3://baskpipe/lambdas/$LAMBDA_NAME.zip --profile=$PROFILE
+fi
+```
+With that commented out, you can now package and upload the Lambdas to S3. Run the script as follows:
+```
+./lambdas/deploy.sh LAMBDA_NAME OPTIONAL_PROFILE
+```
+If you encounter any permission issues, run:
+```
+chmod +x ./lambdas/deploy.sh
+```
+
+To upload the 4 lambdas, run:
+```
+./lambdas/deploy.sh baskpipe-daily-scrape
+./lambdas/deploy.sh s3-to-postgres
+./lambdas/deploy.sh sql-execute
+./lambdas/deploy.sh trigger-daily-scrape
+```
+
+**Don't forget to uncomment the commented-out block afterward!**
+
+### Back to Running Terraform
+
+Now, you can rerun:
+```
+terraform plan
+terraform apply
+```
+This should work and create the remaining resources. If you run into any issues, feel free to reach out for help.
+
+### Upload the queries needed for pipelines to work
+Next, upload the database code (SQLs) to S3. This is typically handled via GitHub Actions, but for the first setup, it needs to be done manually:
+```
+aws s3 sync ./db s3://baskpipe/sqls/ --delete
+```
+
+he above process should have created the following AWS resources:
+- RDS DB
+- Step Functions
+- Lambdas
+- S3 bucket
+- EventBridge rules
+- SNS topics
+- ... maybe others
+
+You are now all set to start running pipelines.
+
+## Running the Pipelines
+
+### Initialize the Database
+Go to the AWS console (or use the AWS CLI), navigate to Step Functions, select ``baskpipe-initdb``, and click "Start Execution". This pipeline will initialize your RDS database by creating the required Postgres extensions and tables needed to store data.
+
+### Backfill the Data
+The ``baskpipe-season-games-backfill`` Step Function can be run with the following initial state:
 ```
 {
   "years": [
@@ -26,39 +111,45 @@ The entire AWS infrastrucutre is controlled by Terraform.
     2024
   ]
 }
-
 ```
 
-Create a file called main.tf (copy template from main.tf.example).
-
-In order to use, you need to navigate into the terraform folder.
-```
-cd terraform
-```
-
-It controls the AWS infrastructure.
-- creates
-- updates
-- destroys
+It expects CSV files for entire seasons to be available on S3 at ``s3://baskpipe/data/season_games/``. These files are not included in this repository but can be scraped using this scraper https://github.com/orion512/baskref.
 
 ```
-terraform init
-
-terraform plan
-
-terraform apply
+# example command for scraping all games from 2024
+baskref -t gs -y 2023 -fp datasets
 ```
-
-Create a file terraform.tvars (which is gitignored).
-In the file define your DB password.
+Once scraped you can upload them all to S3 with
 ```
-baskpipe_db_password = "YOUR_PASSWORD"
+aws s3 sync ./datasets s3://baskpipe/data/season_games/ --delete
 ```
+If you need historical CSVs, I have files dating back to 2000 — let me know if you'd like them.
 
-## Sync code change with Terraform
-There are two pieces of code that need to be synced with AWS:
-- contents of DB folder needs to be uploaded to S3
-- every lambda function needs to be built, zipped, uploaded to S3 and update the lambda
+## Development and CI/CD
+
+### Prepare dev environment
+Create a new virtual environemnt
+```
+python -m venv venv
+source venv/bin/activate
+```
+Install all the dev requirements
+```
+pip install -r requirements_dev.txt
+
+# uninstall all packages linux
+pip freeze | xargs pip uninstall -y
+```
+Install the pre-commit hook
+```
+pre-commit install
+```
+On commit the hook will automatically run black, isort and pylint.
+```
+black .
+pylint --recursive=y ./
+isort .
+```
 
 ### GitHub Actions
 First you need to add AWS Credentials to GitHub Secrets:
@@ -70,29 +161,11 @@ First you need to add AWS Credentials to GitHub Secrets:
     - Name: AWS_SECRET_ACCESS_KEY, Value: your AWS secret access key.
     - Name: AWS_REGION, Value: your AWS region.
 
-### Manual
-Sync all SQLs to S3 to be used by AWS services.
-```
-aws s3 sync ./db s3://baskpipe/sqls/ --delete --profile per-iac-man
-```
+There are 3 Actions wcich will run on any newly pushed code:
+- linting
+- If linting is successful, the files in the ``/db`` folder will be uploaded to S3.
+- If linting is successful, all Lambdas will be deployed.
 
-Deploy a lambda
-```
-./lambdas/deploy.sh LAMBDA_NAME OPTIONAL_PROFILE
-./lambdas/deploy.sh s3-to-postgres per-iac-man
-```
+## Contributors
 
-chmod +x ./lambdas/deploy.sh
-
-### Code Formatting
-black .
-pylint --recursive=y ./
-
-is there a way to not allow to commit if not installed
-pre-commit install
-
-
-Push seasons data to S3
-```
-aws s3 sync ./datasets s3://baskpipe/data/season_games/ --delete --profile per-iac-man
-```
+1. [Dominik Zulovec Sajovic](https://www.linkedin.com/in/dominik-zulovec-sajovic/)
