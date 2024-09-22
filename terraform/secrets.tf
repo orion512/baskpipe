@@ -6,7 +6,7 @@ resource "aws_secretsmanager_secret" "baskpipe_db_secret" {
 resource "aws_secretsmanager_secret_version" "baskpipe_db_secret_version" {
   secret_id     = aws_secretsmanager_secret.baskpipe_db_secret.id
   secret_string = jsonencode({
-    host     = aws_db_instance.baskpipedb.address
+    host     = aws_db_instance.baskpipe_db.address
     port     = "5432"
     username = "baskpipebot"
     password = var.baskpipe_db_password

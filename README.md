@@ -1,16 +1,35 @@
 # Baskpipe (Basketball Data Pipeline)
-A fully AWS native data pipeline.
-....some text on what it does...
 
-# How to use it?
-Make sure you first follow the setup.
-
-Init DB has to happen first.
-
+Fully AWS native data pipelines for processing basketball (NBA) data.
 
 # Setup
 
+The entire AWS infrastrucutre is controlled by Terraform.
+
 ## Infrastructure on AWS with Terraform
+
+- setup credentials
+- setup variables
+- run terraform (it will fail)
+- upload lambdas
+- run terraform again
+- upload db
+- run initdb pipeline
+
+```
+{
+  "years": [
+    2000,
+    2001,
+    ...
+    2023,
+    2024
+  ]
+}
+
+```
+
+Create a file called main.tf (copy template from main.tf.example).
 
 In order to use, you need to navigate into the terraform folder.
 ```
@@ -71,3 +90,9 @@ pylint --recursive=y ./
 
 is there a way to not allow to commit if not installed
 pre-commit install
+
+
+Push seasons data to S3
+```
+aws s3 sync ./datasets s3://baskpipe/data/season_games/ --delete --profile per-iac-man
+```
