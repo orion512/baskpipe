@@ -8,9 +8,10 @@ resource "aws_sns_topic_subscription" "email_subscription" {
   endpoint  = var.notification_email
 }
 
-resource "aws_sns_topic_subscription" "sms_subscription" {
-  topic_arn = aws_sns_topic.sf_daily_baskref_notification.arn
-  protocol  = "sms"
-  endpoint  = var.notification_phone_number
-}
+# currently not using
+# resource "aws_sns_topic_subscription" "sms_subscription" {
+#   topic_arn = aws_sns_topic.sf_daily_baskref_notification.arn
+#   protocol  = "sms"
+#   endpoint  = var.notification_phone_number
+# }
 

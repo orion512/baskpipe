@@ -26,7 +26,7 @@ resource "aws_cloudwatch_event_target" "sf_daily_games_failure_target" {
 
 resource "aws_cloudwatch_event_rule" "baskpipe_daily_rule" {
   name                = "baskpipe-daily-rule"
-  schedule_expression = "cron(30 7 * * ? *)"  # Runs every day at 7:30 UTC
+  schedule_expression = "cron(30 11 * * ? *)"  # Runs every day at 11:30 UTC
 }
 
 resource "aws_lambda_permission" "baskpipe-allow-eventbridge-daily" {
